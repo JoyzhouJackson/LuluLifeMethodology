@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>人生管理系统</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-goals">
+        <div>
+          <span>短期目标</span>
+          <strong id="activeShort">未设置</strong>
+        </div>
+        <div>
+          <span>长期目标</span>
+          <strong id="activeLong">未设置</strong>
+        </div>
+      </div>
+      <button class="goal-write-button" data-sheet="goals">写目标</button>
+    </header>
+
+    <main class="app-main">
+      <section id="homeView" class="view active">
+        <section class="hero-card">
+          <div>
+            <p class="eyebrow">🌿 今日入口</p>
+            <h2>先记录，再慢慢长成自己的方法论。</h2>
+          </div>
+          <button class="primary wide" data-sheet="quick">🌙 随心记</button>
+        </section>
+
+        <section class="entry-actions" aria-label="记录入口">
+          <button class="action-card success-card" data-sheet="success">
+            <span>
+              <strong>🌟 成功日记</strong>
+              <small>记录服务于目标的进展</small>
+            </span>
+          </button>
+          <button class="action-card gratitude-card" data-sheet="gratitude">
+            <span>
+              <strong>🤍 感恩日记</strong>
+              <small>小确幸、贵人、机会</small>
+            </span>
+          </button>
+          <button class="action-card mistake-card" data-sheet="mistake">
+            <span>
+              <strong>🪞 错事错话本</strong>
+              <small>看见失手，然后修正</small>
+            </span>
+          </button>
+          <button class="action-card habit-card" data-sheet="habit">
+            <span>
+              <strong>🍃 戒坏习惯</strong>
+              <small>一次替代，存 1 欧</small>
+            </span>
+          </button>
+        </section>
+
+        <section class="muyu-home">
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow">🪵 肯定语</p>
+              <h2 id="homeAffirmationText">我越来越稳定、清明、有力量</h2>
+            </div>
+            <button class="text-button" data-sheet="affirmation">编辑肯定语</button>
+          </div>
+          <button id="homeMuyuButton" class="muyu home-muyu" aria-label="敲一下木鱼">
+            <span class="muyu-body"></span>
+            <span class="muyu-stick"></span>
+          </button>
+          <p class="muyu-count" id="affirmationCount">0 / 100000</p>
+        </section>
+
+        <section class="piggy-home" aria-label="存钱罐">
+            <div class="piggy-copy">
+              <span class="card-label">💰 存钱罐</span>
+              <strong id="bankBalance">0 欧</strong>
+              <button class="text-button" data-sheet="piggy">兑换 / 记录奖励</button>
+            </div>
+            <div class="piggy-mini-stage">
+              <div class="piggy small-piggy">
+                <div class="piggy-fill" id="homePiggyFill"></div>
+                <div class="coin-layer" id="homeCoinLayer"></div>
+                <div class="piggy-slot"></div>
+                <div class="piggy-ear"></div>
+                <div class="piggy-nose"></div>
+                <div class="piggy-foot left"></div>
+                <div class="piggy-foot right"></div>
+              </div>
+            </div>
+        </section>
+
+        <section class="quiet-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">📖 最近沉淀</p>
+              <h2>刚刚留下的东西</h2>
+            </div>
+          </div>
+          <div id="recentList" class="recent-list"></div>
+        </section>
+      </section>
+
+      <section id="methodView" class="view">
+        <section class="quiet-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">🧭 Methodology</p>
+              <h2>我的方法论</h2>
+            </div>
+            <button class="primary" data-sheet="method">➕ 新增流程</button>
+          </div>
+          <div id="methodList" class="method-list"></div>
+        </section>
+      </section>
+
+      <section id="reviewView" class="view">
+        <section class="reader-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">📜 Daily Page</p>
+              <h2 id="dailyDate">今日书页</h2>
+            </div>
+            <button class="secondary" id="refreshDaily">刷新</button>
+          </div>
+          <div id="dailyPage" class="daily-page"></div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="底部菜单">
+      <button class="nav-item active" data-view="home">
+        <span>🏠</span>
+        <small>首页</small>
+      </button>
+      <button class="nav-item" data-view="method">
+        <span>🧭</span>
+        <small>方法论</small>
+      </button>
+      <button class="nav-item" data-view="review">
+        <span>📖</span>
+        <small>书页</small>
+      </button>
+    </nav>
+
+    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+    <section class="bottom-sheet" id="bottomSheet" aria-modal="true" role="dialog" hidden>
+      <div class="sheet-handle"></div>
+      <header class="sheet-header">
+        <div>
+          <p class="eyebrow" id="sheetEyebrow">Record</p>
+          <h2 id="sheetTitle">记录</h2>
+        </div>
+        <button class="round-button muted-button" id="closeSheet" aria-label="关闭">×</button>
+      </header>
+
+      <div class="sheet-body">
+        <form id="quickForm" class="sheet-panel" data-panel="quick">
+          <textarea id="quickInput" class="large-input" placeholder="想到什么就写什么，不用分类，不用解释。"></textarea>
+          <div class="sheet-actions">
+            <span class="muted" id="saveStatus">本地离线保存</span>
+            <button class="primary" type="submit">记下来</button>
+          </div>
+        </form>
+
+        <form id="successForm" class="sheet-panel" data-panel="success">
+          <input id="successEvent" placeholder="今天成功了什么">
+          <select id="successGoal"></select>
+          <textarea id="successLesson" placeholder="这件事说明我做对了什么？下次如何复用？"></textarea>
+          <button class="primary wide" type="submit">保存成功</button>
+        </form>
+
+        <form id="gratitudeForm" class="sheet-panel" data-panel="gratitude">
+          <select id="gratitudeCategory">
+            <option>人物</option>
+            <option>瞬间</option>
+            <option>事件</option>
+            <option>资源机会</option>
+            <option>身体</option>
+            <option>其他</option>
+          </select>
+          <textarea id="gratitudeContent" placeholder="我感恩什么？"></textarea>
+          <button class="primary wide" type="submit">保存感恩</button>
+        </form>
+
+        <form id="mistakeForm" class="sheet-panel" data-panel="mistake">
+          <select id="mistakeCategory">
+            <option>节奏失手</option>
+            <option>控制失手</option>
+            <option>定位失手</option>
+            <option>谦卑失手</option>
+            <option>承诺失手</option>
+            <option>丰富感失手</option>
+            <option>出口失手</option>
+            <option>边界失守</option>
+          </select>
+          <textarea id="mistakeContent" placeholder="发生了什么？我说错或做错了什么？"></textarea>
+          <textarea id="mistakeCorrection" placeholder="下次我希望怎么修正？"></textarea>
+          <button class="primary wide" type="submit">保存复盘</button>
+        </form>
+
+        <form id="habitForm" class="sheet-panel" data-panel="habit">
+          <input id="habitTitle" placeholder="当前要戒掉的坏习惯，例如：短视频">
+          <textarea id="habitAlternatives" placeholder="替代方案，一行一个：散步十分钟&#10;读两页书&#10;洗个澡"></textarea>
+          <button class="secondary wide" type="button" id="saveHabit">保存当前坏习惯</button>
+          <div class="subtle-line"></div>
+          <input id="habitTrigger" placeholder="刚才为什么想做这个坏习惯？">
+          <select id="habitAlternative"></select>
+          <p class="field-hint" id="habitAlternativeHint">先在上方保存替代方案，之后这里会出现可选择的方案。</p>
+          <label class="check-row">
+            <input id="habitCompleted" type="checkbox" checked>
+            <span>我完成了一次替代，给存钱罐 +1 欧</span>
+          </label>
+          <button class="primary wide" id="habitRecordButton" type="submit">记录这次冲动</button>
+        </form>
+
+        <div class="sheet-panel" data-panel="goals">
+          <div class="goal-row">
+            <article>
+              <span>短期目标</span>
+              <strong id="sheetActiveShort">未设置</strong>
+              <button class="secondary wide" data-complete-goal="short">完成 +50 欧</button>
+            </article>
+            <article>
+              <span>长期目标</span>
+              <strong id="sheetActiveLong">未设置</strong>
+              <button class="secondary wide" data-complete-goal="long">完成 +200 欧</button>
+            </article>
+          </div>
+          <form id="goalForm" class="stack-form">
+            <select id="goalType">
+              <option value="short">设为短期目标</option>
+              <option value="long">设为长期目标</option>
+              <option value="backlog">放入待实现目标</option>
+            </select>
+            <input id="goalTitle" placeholder="写下一个目标">
+            <button class="primary wide" type="submit">保存目标</button>
+          </form>
+          <div id="backlogGoals" class="small-list"></div>
+        </div>
+
+        <form id="redeemForm" class="sheet-panel" data-panel="piggy">
+          <div class="piggy-stage">
+            <div class="piggy">
+              <div class="piggy-fill" id="sheetPiggyFill"></div>
+              <div class="coin-layer" id="sheetCoinLayer"></div>
+              <div class="piggy-slot"></div>
+              <div class="piggy-ear"></div>
+              <div class="piggy-nose"></div>
+              <div class="piggy-foot left"></div>
+              <div class="piggy-foot right"></div>
+            </div>
+          </div>
+          <input id="rewardTitle" placeholder="奖励了自己什么">
+          <input id="rewardAmount" type="number" min="1" step="1" placeholder="金额">
+          <input id="rewardPhoto" type="file" accept="image/*">
+          <button class="primary wide" type="submit">兑换奖励</button>
+        </form>
+
+        <div class="sheet-panel" data-panel="affirmation">
+          <textarea id="affirmationText" rows="2"></textarea>
+          <button id="muyuButton" class="muyu" aria-label="敲一下木鱼">
+            <span class="muyu-body"></span>
+            <span class="muyu-stick"></span>
+          </button>
+          <div class="progress-line">
+            <span id="affirmationSheetCount">0 / 100000</span>
+            <div class="progress-track"><div id="affirmationProgress"></div></div>
+          </div>
+          <button class="secondary wide" id="saveAffirmation" type="button">更新肯定语</button>
+        </div>
+
+        <form id="methodForm" class="sheet-panel method-editor-panel" data-panel="method">
+          <input id="methodEditingId" type="hidden">
+          <input id="methodTitle" placeholder="方法论标题">
+          <select id="methodCategory">
+            <option>自我修炼</option>
+            <option>行动推进</option>
+            <option>沟通关系</option>
+            <option>事业成长</option>
+            <option>商业变现</option>
+          </select>
+          <div class="canvas-tools" aria-label="画布工具">
+            <button type="button" class="secondary" data-canvas-tool="rect">□ 方框</button>
+            <button type="button" class="secondary" data-canvas-tool="diamond">◇ 菱形</button>
+            <button type="button" class="secondary" data-canvas-tool="arrow">→ 箭头</button>
+            <button type="button" class="secondary" data-canvas-tool="elbow">┐ 直角箭头</button>
+            <button type="button" class="secondary" data-canvas-tool="note">A 备注</button>
+            <button type="button" class="secondary danger-lite" id="deleteCanvasSelection">删除选中</button>
+          </div>
+          <p class="field-hint">点击工具新增元素；拖动方框、菱形和备注调整位置；选中箭头后再点两个图形，箭头会自动吸附到边的中心点。</p>
+          <div class="method-canvas-shell">
+            <div id="methodCanvas" class="method-canvas"></div>
+          </div>
+          <textarea id="canvasTextEditor" class="canvas-text-editor" placeholder="编辑选中内容"></textarea>
+          <button class="primary wide" type="submit">保存方法论</button>
+        </form>
+      </div>
+    </section>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
