@@ -58,6 +58,7 @@
           </button>
         </section>
 
+        <section class="ritual-row">
         <section class="muyu-home">
           <div class="section-head compact">
             <div>
@@ -79,28 +80,9 @@
               <strong id="bankBalance">0 欧</strong>
               <button class="text-button" data-sheet="piggy">兑换 / 记录奖励</button>
             </div>
-            <div class="piggy-mini-stage">
-              <div class="piggy small-piggy">
-                <div class="piggy-fill" id="homePiggyFill"></div>
-                <div class="coin-layer" id="homeCoinLayer"></div>
-                <div class="piggy-slot"></div>
-                <div class="piggy-ear"></div>
-                <div class="piggy-nose"></div>
-                <div class="piggy-foot left"></div>
-                <div class="piggy-foot right"></div>
-              </div>
-            </div>
+        </section>
         </section>
 
-        <section class="quiet-panel">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">📖 最近沉淀</p>
-              <h2>刚刚留下的东西</h2>
-            </div>
-          </div>
-          <div id="recentList" class="recent-list"></div>
-        </section>
       </section>
 
       <section id="methodView" class="view">
@@ -111,6 +93,20 @@
               <h2>我的方法论</h2>
             </div>
             <button class="primary" data-sheet="method">➕ 新增流程</button>
+          </div>
+          <div class="method-filter-bar" aria-label="方法论筛选">
+            <select id="methodSort">
+              <option value="newest">最新优先</option>
+              <option value="oldest">最早优先</option>
+            </select>
+            <select id="methodCategoryFilter">
+              <option value="all">全部类别</option>
+              <option>自我修炼</option>
+              <option>行动推进</option>
+              <option>沟通关系</option>
+              <option>事业成长</option>
+              <option>商业变现</option>
+            </select>
           </div>
           <div id="methodList" class="method-list"></div>
         </section>

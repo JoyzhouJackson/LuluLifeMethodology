@@ -160,9 +160,9 @@ function renderPiggyBank() {
   const coinCount = Math.max(0, Math.floor(balance));
 
   $('#bankBalance').textContent = `${balance} 欧`;
-  $('#homePiggyFill').style.height = fill;
+  if ($('#homePiggyFill')) $('#homePiggyFill').style.height = fill;
   $('#sheetPiggyFill').style.height = fill;
-  renderCoins('#homeCoinLayer', coinCount, true);
+  if ($('#homeCoinLayer')) renderCoins('#homeCoinLayer', coinCount, true);
   renderCoins('#sheetCoinLayer', coinCount, false);
 }
 
@@ -360,8 +360,17 @@ function methodPreviewMarkup(method) {
 }
 
 function renderMethods() {
-  $('#methodList').innerHTML = state.data.methodologies.length
-    ? state.data.methodologies
+  const sort = $('#methodSort')?.value || 'newest';
+  const category = $('#methodCategoryFilter')?.value || 'all';
+  const methods = state.data.methodologies
+    .filter((method) => category === 'all' || method.category === category)
+    .sort((a, b) => {
+      const delta = new Date(b.createdAt) - new Date(a.createdAt);
+      return sort === 'oldest' ? -delta : delta;
+    });
+
+  $('#methodList').innerHTML = methods.length
+    ? methods
         .map(
           (method) => `
             <article class="method-card">
@@ -379,7 +388,7 @@ function renderMethods() {
           `
         )
         .join('')
-    : '<p class="empty">还没有方法论。点右上角新增一个可实践路径。</p>';
+    : '<p class="empty">还没有匹配的方法论。换一个筛选，或新增一个可实践路径。</p>';
   fitMethodPreviews();
 }
 
@@ -415,6 +424,22 @@ function createDailyPage(data) {
   };
 }
 
+function dateStripMarkup() {
+  const today = new Date();
+  return Array.from({ length: 9 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index - 4);
+    const active = date.toDateString() === today.toDateString();
+    const week = date.toLocaleDateString('en-US', { weekday: 'short' });
+    return `
+      <button class="date-chip${active ? ' active' : ''}" type="button">
+        <span>${week}</span>
+        <strong>${date.getDate()}</strong>
+      </button>
+    `;
+  }).join('');
+}
+
 function bookSection(title, items) {
   const preview = items[0] || '这里还在等待你的记录。';
   const detail = items.length
@@ -436,15 +461,28 @@ function bookSection(title, items) {
 
 function renderDailyPage() {
   const page = createDailyPage(state.data);
-  $('#dailyDate').textContent = page.date;
-  $('#dailyPage').innerHTML = [
-    bookSection('🌙 随心记', page.quickNotes.map((entry) => entry.content)),
-    bookSection('🌟 成功日记', page.successEntries.map((entry) => `${entry.event}${entry.lesson ? `：${entry.lesson}` : ''}`)),
-    bookSection('🤍 感恩日记', page.gratitudeEntries.map((entry) => `${entry.category}：${entry.content}`)),
-    bookSection('🪞 错事错话本', page.mistakeEntries.map((entry) => `${entry.category}：${entry.content}${entry.correction ? `；下次：${entry.correction}` : ''}`)),
-    bookSection('🧭 方法论', page.methodologies.map((entry) => `${entry.title}：${(entry.nodes || []).join(' → ')}`)),
-  ].join('');
-  $('#dailyPage').classList.add('daily-summary');
+  $('#dailyDate').textContent = 'My Journal';
+  $('#dailyPage').innerHTML = `
+    <section class="date-strip" aria-label="选择日期">
+      ${dateStripMarkup()}
+    </section>
+    <section class="today-book-section">
+      <div class="inline-section-head">
+        <h3>Today’s Pages</h3>
+        <span>${page.date}</span>
+      </div>
+      <div class="daily-summary">
+        ${[
+          bookSection('🌙 随心记', page.quickNotes.map((entry) => entry.content)),
+          bookSection('🌟 成功日记', page.successEntries.map((entry) => `${entry.event}${entry.lesson ? `：${entry.lesson}` : ''}`)),
+          bookSection('🤍 感恩日记', page.gratitudeEntries.map((entry) => `${entry.category}：${entry.content}`)),
+          bookSection('🪞 错事错话本', page.mistakeEntries.map((entry) => `${entry.category}：${entry.content}${entry.correction ? `；下次：${entry.correction}` : ''}`)),
+          bookSection('🧭 方法论', page.methodologies.map((entry) => `${entry.title}：${(entry.nodes || []).join(' → ')}`)),
+        ].join('')}
+      </div>
+    </section>
+  `;
+  $('#dailyPage').classList.remove('daily-summary');
 }
 
 function renderAll() {
@@ -452,7 +490,6 @@ function renderAll() {
   renderPiggyBank();
   renderAffirmation();
   renderHabit();
-  renderRecent();
   renderMethods();
   renderDailyPage();
 }
@@ -614,12 +651,14 @@ async function hitMuyu(button) {
 }
 
 function bindNavigation() {
+  document.body.dataset.view = 'home';
   $$('.nav-item').forEach((button) => {
     button.addEventListener('click', () => {
       $$('.nav-item').forEach((item) => item.classList.remove('active'));
       $$('.view').forEach((view) => view.classList.remove('active'));
       button.classList.add('active');
       $(`#${button.dataset.view}View`).classList.add('active');
+      document.body.dataset.view = button.dataset.view;
       closeSheet();
       if (button.dataset.view === 'method') {
         requestAnimationFrame(fitMethodPreviews);
@@ -627,12 +666,16 @@ function bindNavigation() {
     });
   });
 
-  $$('[data-sheet]').forEach((button) => {
-    button.addEventListener('click', () => openSheet(button.dataset.sheet));
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-sheet]');
+    if (!button) return;
+    openSheet(button.dataset.sheet);
   });
 
   $('#closeSheet').addEventListener('click', closeSheet);
   $('#sheetBackdrop').addEventListener('click', closeSheet);
+  $('#methodSort')?.addEventListener('change', renderMethods);
+  $('#methodCategoryFilter')?.addEventListener('change', renderMethods);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && state.activeSheet) closeSheet();
   });
