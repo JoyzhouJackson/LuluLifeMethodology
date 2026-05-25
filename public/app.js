@@ -272,9 +272,20 @@ function renderAffirmation() {
   const affirmation = state.data.affirmation;
   $('#homeAffirmationText').textContent = affirmation.text || '写下一句此刻最重要的肯定语';
   $('#affirmationText').value = affirmation.text || '';
+  $('#affirmationTarget').value = affirmation.targetCount || 100000;
   $('#affirmationCount').textContent = `${affirmation.count} / ${affirmation.targetCount}`;
   $('#affirmationSheetCount').textContent = `${affirmation.count} / ${affirmation.targetCount}`;
   $('#affirmationProgress').style.width = `${Math.min(100, (affirmation.count / affirmation.targetCount) * 100)}%`;
+  $('#affirmationHistoryList').innerHTML = affirmation.history?.length
+    ? affirmation.history
+        .map((item) => `
+          <article class="small-item history-item">
+            <span>${escapeHtml(item.text)}</span>
+            <small>${item.count || 0} 次 · ${new Date(item.archivedAt).toLocaleDateString('zh-CN')}</small>
+          </article>
+        `)
+        .join('')
+    : '<p class="empty">换过的肯定语会留在这里。</p>';
 }
 
 function renderHabit() {
@@ -290,6 +301,35 @@ function renderHabit() {
   $('#habitAlternativeHint').textContent = alternatives.length
     ? '想做坏习惯的时候，从这里选一个替代方案去做。'
     : '先在上方保存替代方案，之后这里会出现可选择的方案。';
+  renderHabitHistory();
+}
+
+function renderHabitHistory() {
+  const current = state.data.habit.current;
+  const records = state.data.habit.records || [];
+  const groups = new Map();
+  records.forEach((record) => {
+    const title = record.habitTitle || current?.title || '未命名习惯';
+    const item = groups.get(title) || { title, total: 0, completed: 0, latest: record.createdAt };
+    item.total += 1;
+    item.completed += record.completed ? 1 : 0;
+    if (new Date(record.createdAt) > new Date(item.latest)) item.latest = record.createdAt;
+    groups.set(title, item);
+  });
+  if (current?.title && !groups.has(current.title)) {
+    groups.set(current.title, { title: current.title, total: 0, completed: 0, latest: current.updatedAt });
+  }
+  const habits = Array.from(groups.values()).sort((a, b) => new Date(b.latest) - new Date(a.latest));
+  $('#habitHistoryList').innerHTML = habits.length
+    ? habits
+        .map((item) => `
+          <article class="small-item history-item">
+            <span>${escapeHtml(item.title)}</span>
+            <small>${item.completed} 次成功替代 · ${new Date(item.latest).toLocaleDateString('zh-CN')}</small>
+          </article>
+        `)
+        .join('')
+    : '<p class="empty">保存过的坏习惯和替代记录会在这里沉淀。</p>';
 }
 
 function recentItems() {
@@ -1041,6 +1081,7 @@ function bindForms() {
       trigger,
       alternative: $('#habitAlternative').value,
       completed,
+      habitTitle: state.data.habit.current?.title || $('#habitTitle').value.trim(),
       createdAt: now(),
     };
     state.data.habit.records.unshift(record);
@@ -1079,17 +1120,26 @@ function bindForms() {
 
   $('#homeMuyuButton').addEventListener('click', () => hitMuyu($('#homeMuyuButton')));
   $('#muyuButton').addEventListener('click', () => hitMuyu($('#muyuButton')));
+  $('.muyu-home').addEventListener('click', (event) => {
+    if (event.target.closest('.muyu')) return;
+    openSheet('affirmation');
+  });
 
   $('#saveAffirmation').addEventListener('click', async () => {
     const text = $('#affirmationText').value.trim();
-    if (!text || text === state.data.affirmation.text) return;
-    state.data.affirmation.history.unshift({
-      text: state.data.affirmation.text,
-      count: state.data.affirmation.count,
-      archivedAt: now(),
-    });
-    state.data.affirmation.text = text;
-    state.data.affirmation.count = 0;
+    const targetCount = Math.max(1, Math.floor(Number($('#affirmationTarget').value || 100000)));
+    if (!text) return;
+    if (text !== state.data.affirmation.text) {
+      state.data.affirmation.history.unshift({
+        text: state.data.affirmation.text,
+        count: state.data.affirmation.count,
+        targetCount: state.data.affirmation.targetCount,
+        archivedAt: now(),
+      });
+      state.data.affirmation.text = text;
+      state.data.affirmation.count = 0;
+    }
+    state.data.affirmation.targetCount = targetCount;
     state.data.affirmation.updatedAt = now();
     await saveData();
     closeSheet();

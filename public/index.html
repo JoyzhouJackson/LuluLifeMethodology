@@ -91,7 +91,7 @@
               <p class="eyebrow">🧭 Methodology</p>
               <h2>我的方法论</h2>
             </div>
-            <button class="primary" data-sheet="method">➕ 新增流程</button>
+            <button class="primary" data-sheet="method" type="button">➕ 新增流程</button>
           </div>
           <div class="method-filter-bar" aria-label="方法论筛选">
             <select id="methodSort">
@@ -227,6 +227,10 @@
             <span>我完成了一次替代，给存钱罐 +1 欧</span>
           </label>
           <button class="primary wide" id="habitRecordButton" type="submit">记录这次冲动</button>
+          <section class="habit-history-block">
+            <h3>历史戒掉的坏习惯</h3>
+            <div id="habitHistoryList" class="small-list"></div>
+          </section>
         </form>
 
         <div class="sheet-panel" data-panel="goals">
@@ -270,6 +274,8 @@
 
         <div class="sheet-panel" data-panel="affirmation">
           <textarea id="affirmationText" rows="2"></textarea>
+          <label class="field-label" for="affirmationTarget">目标次数</label>
+          <input id="affirmationTarget" type="number" min="1" step="1" placeholder="例如 100000">
           <button id="muyuButton" class="muyu" aria-label="敲一下木鱼">
             <span class="muyu-body"></span>
             <span class="muyu-stick"></span>
@@ -279,6 +285,10 @@
             <div class="progress-track"><div id="affirmationProgress"></div></div>
           </div>
           <button class="secondary wide" id="saveAffirmation" type="button">更新肯定语</button>
+          <section class="affirmation-history-block">
+            <h3>历史肯定语</h3>
+            <div id="affirmationHistoryList" class="small-list"></div>
+          </section>
         </div>
 
         <form id="methodForm" class="sheet-panel method-editor-panel" data-panel="method">
