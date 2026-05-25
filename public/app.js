@@ -4,6 +4,7 @@ const state = {
   activeSheet: null,
   goalEditingType: 'short',
   reviewDate: new Date(),
+  dateStripScrollLeft: null,
   calendarOpen: false,
   canvas: {
     nodes: [],
@@ -209,8 +210,6 @@ function openSheet(name) {
   $('#sheetBackdrop').classList.add('is-open');
   $('#bottomSheet').classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  const firstField = $(`.sheet-panel[data-panel="${name}"] textarea, .sheet-panel[data-panel="${name}"] input, .sheet-panel[data-panel="${name}"] select`);
-  setTimeout(() => firstField?.focus(), 120);
 }
 
 function openGoalEditor(type) {
@@ -782,6 +781,11 @@ function renderDailyPage() {
   `;
   $('#dailyPage').classList.remove('daily-summary');
   renderCalendarControls();
+  if (Number.isFinite(state.dateStripScrollLeft)) {
+    const strip = $('.date-strip');
+    if (strip) strip.scrollLeft = state.dateStripScrollLeft;
+    state.dateStripScrollLeft = null;
+  }
 }
 
 function renderAll() {
@@ -1021,6 +1025,8 @@ function bindNavigation() {
   document.addEventListener('click', (event) => {
     const dateButton = event.target.closest('[data-date]');
     if (!dateButton) return;
+    const strip = dateButton.closest('.date-strip');
+    state.dateStripScrollLeft = strip ? strip.scrollLeft : null;
     state.reviewDate = new Date(`${dateButton.dataset.date}T12:00:00`);
     renderDailyPage();
   });
@@ -1377,11 +1383,13 @@ function bindForms() {
   });
 
   $('#calendarYear').addEventListener('change', () => {
+    state.dateStripScrollLeft = null;
     state.reviewDate.setFullYear(Number($('#calendarYear').value));
     renderDailyPage();
   });
 
   $('#calendarMonth').addEventListener('change', () => {
+    state.dateStripScrollLeft = null;
     state.reviewDate.setMonth(Number($('#calendarMonth').value));
     renderDailyPage();
   });

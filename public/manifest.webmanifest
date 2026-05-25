@@ -1,0 +1,18 @@
+{
+  "name": "露露的人生管理系统",
+  "short_name": "露露人生",
+  "description": "私人日记、方法论、目标与习惯管理系统",
+  "start_url": "../?source=pwa",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#faf9f7",
+  "theme_color": "#8876aa",
+  "icons": [
+    {
+      "src": "app-icon.jpg",
+      "sizes": "1080x1080",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
