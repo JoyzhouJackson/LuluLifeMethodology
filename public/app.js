@@ -198,50 +198,78 @@ function renderGoals() {
   const shortTitle = state.data.goals.activeShort?.title || '未设置';
   const longTitle = state.data.goals.activeLong?.title || '未设置';
   const shortReward = Number(state.data.goals.activeShort?.rewardAmount || 0);
-  const longReward = Number(state.data.goals.activeLong?.rewardAmount || 0);
   $('#activeShort').textContent = shortTitle;
   $('#activeLong').textContent = longTitle;
   $('#sheetActiveShort').textContent = shortTitle;
-  $('#sheetActiveLong').textContent = longTitle;
-  $('#sheetShortReward').textContent = shortReward ? `完成奖励 ${shortReward} 欧` : '未设置奖励';
-  $('#sheetLongReward').textContent = longReward ? `完成奖励 ${longReward} 欧` : '未设置奖励';
+  $('#sheetShortReward').textContent = shortReward ? `奖励：${shortReward} 欧` : '未设置奖励';
 
   $('#successGoal').innerHTML = ['科研', '搞钱', '身体', '语言', '修炼']
     .map((category) => `<option value="${category}">${category}</option>`)
     .join('');
 
-  $('#backlogGoals').innerHTML = state.data.goals.backlog.length
-    ? state.data.goals.backlog
+  const formatGoalDate = (value) =>
+    value
+      ? new Date(value).toLocaleString('zh-CN', {
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '未记录时间';
+  const rewardLabel = (goal) => (Number(goal?.rewardAmount || 0) ? `奖励：${Number(goal.rewardAmount)} 欧` : '未设置奖励');
+  const pendingGoals = [...(state.data.goals.backlog || [])]
+    .filter((goal) => goal.type === 'short' || !goal.type)
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const completedGoals = [...(state.data.goals.completed || [])].sort(
+    (a, b) => new Date(b.completedAt || b.createdAt || 0) - new Date(a.completedAt || a.createdAt || 0)
+  );
+  const pendingCards = pendingGoals.length
+    ? pendingGoals
         .map(
           (goal) => `
-            <div class="small-item">
-              <div class="row">
-                <span>${escapeHtml(goal.title)}</span>
-                <small>${new Date(goal.createdAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>
-                <span>
-                  <button class="secondary" data-promote="${goal.id}" data-type="short">短期</button>
-                  <button class="secondary" data-promote="${goal.id}" data-type="long">长期</button>
-                </span>
-              </div>
-            </div>
+            <article class="goal-history-card">
+              <small>下一个短期目标 · ${formatGoalDate(goal.createdAt)}</small>
+              <strong>${escapeHtml(goal.title)}</strong>
+              <span>${rewardLabel(goal)}</span>
+              <button class="secondary wide" data-promote="${goal.id}" data-type="short">设为当前</button>
+            </article>
           `
         )
         .join('')
-    : '<p class="empty">还没有下一个目标。</p>';
+    : '<p class="empty">还没有未完成的短期目标。</p>';
+  const completedCards = completedGoals.length
+    ? completedGoals
+        .map(
+          (goal) => `
+            <article class="goal-history-card completed">
+              <small>完成于 ${formatGoalDate(goal.completedAt)}</small>
+              <strong>${escapeHtml(goal.title)}</strong>
+              <span>${rewardLabel(goal)}</span>
+            </article>
+          `
+        )
+        .join('')
+    : '<p class="empty">完成后的目标会在这里沉淀。</p>';
+
+  $('#backlogGoals').innerHTML = `
+    <details class="goal-tree">
+      <summary><span>未完成的树</span><small>${pendingGoals.length} 个</small></summary>
+      <div class="goal-tree-list">${pendingCards}</div>
+    </details>
+    <details class="goal-tree">
+      <summary><span>已完成的树</span><small>${completedGoals.length} 个</small></summary>
+      <div class="goal-tree-list">${completedCards}</div>
+    </details>
+  `;
 }
 
 function syncGoalForm(type) {
-  const slot = type === 'long' ? 'activeLong' : 'activeShort';
-  const active = state.data?.goals?.[slot];
-  const isLong = type === 'long';
-  $('#goalType').innerHTML = isLong
-    ? '<option value="long">设为当前长期目标</option><option value="nextLong">设为下一个长期目标</option>'
-    : '<option value="short">设为当前短期目标</option><option value="nextShort">设为下一个短期目标</option>';
-  $('#goalType').value = type;
+  const active = state.data?.goals?.activeShort;
+  $('#goalType').innerHTML =
+    '<option value="short">设为当前短期目标</option><option value="nextShort">设为下一个短期目标</option>';
+  $('#goalType').value = type === 'nextShort' ? 'nextShort' : 'short';
   $('#goalTitle').value = active?.title || '';
-  $$('[data-goal-card]').forEach((card) => {
-    card.hidden = card.dataset.goalCard !== type;
-  });
+  $('#goalReward').value = active?.rewardAmount || '';
 }
 
 function renderCoins(selector, count, compact = false) {
@@ -696,6 +724,9 @@ function renderDailyPage() {
   `;
   $('#dailyPage').classList.remove('daily-summary');
   renderCalendarControls();
+  requestAnimationFrame(() => {
+    $('.date-strip .date-chip.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  });
 }
 
 function renderAll() {
@@ -921,7 +952,15 @@ function bindNavigation() {
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-sheet]');
     if (!button) return;
+    event.preventDefault();
     openSheet(button.dataset.sheet);
+  });
+
+  $('#openMethodSheet')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    state.canvas.editingFromCard = false;
+    openSheet('method');
   });
 
   document.addEventListener('click', (event) => {
@@ -956,45 +995,54 @@ function bindForms() {
     event.preventDefault();
     const title = $('#goalTitle').value.trim();
     const type = $('#goalType').value;
+    const rewardAmount = Math.max(0, Math.floor(Number($('#goalReward').value || 0)));
     if (!title) return;
 
-    if (type === 'nextShort' || type === 'nextLong') {
+    if (!Number.isFinite(rewardAmount)) {
+      alert('奖励金额需要是数字。');
+      return;
+    }
+
+    if (type === 'nextShort') {
       state.data.goals.backlog.unshift({
         id: makeId('backlog-goal'),
-        type: type === 'nextShort' ? 'short' : 'long',
+        type: 'short',
         title,
+        rewardAmount,
         createdAt: now(),
         status: 'backlog',
       });
     } else {
-      const slot = type === 'short' ? 'activeShort' : 'activeLong';
+      const slot = 'activeShort';
       if (state.data.goals[slot]) {
         state.data.goals[slot] = {
           ...state.data.goals[slot],
           title,
+          rewardAmount,
           updatedAt: now(),
         };
       } else {
         state.data.goals[slot] = {
-          id: makeId(`${type}-goal`),
-          type,
+          id: makeId('short-goal'),
+          type: 'short',
           title,
+          rewardAmount,
           createdAt: now(),
           status: 'active',
         };
       }
     }
     await saveData();
-    syncGoalForm(type === 'long' || type === 'nextLong' ? 'long' : 'short');
+    syncGoalForm('short');
   });
 
   $('#backlogGoals').addEventListener('click', async (event) => {
     const button = event.target.closest('[data-promote]');
     if (!button) return;
-    const type = button.dataset.type;
-    const slot = type === 'short' ? 'activeShort' : 'activeLong';
+    const type = 'short';
+    const slot = 'activeShort';
     if (state.data.goals[slot]) {
-      alert(`当前${type === 'short' ? '短期' : '长期'}目标需要先完成。`);
+      alert('当前短期目标需要先完成。');
       return;
     }
     const index = state.data.goals.backlog.findIndex((goal) => goal.id === button.dataset.promote);

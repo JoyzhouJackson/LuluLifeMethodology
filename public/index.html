@@ -91,7 +91,7 @@
               <p class="eyebrow">🧭 Methodology</p>
               <h2>我的方法论</h2>
             </div>
-            <button class="primary" data-sheet="method" type="button">➕ 新增流程</button>
+            <button class="primary" id="openMethodSheet" data-sheet="method" type="button">➕ 新增流程</button>
           </div>
           <div class="method-filter-bar" aria-label="方法论筛选">
             <select id="methodSort">
@@ -234,35 +234,26 @@
         </form>
 
         <div class="sheet-panel" data-panel="goals">
-          <div class="goal-row">
-            <article data-goal-card="short">
-              <div class="goal-card-head">
-                <span>短期目标</span>
-                <button class="text-button" type="button" data-goal-reward="short">奖励</button>
-              </div>
-              <strong id="sheetActiveShort">未设置</strong>
-              <small id="sheetShortReward" class="muted">未设置奖励</small>
-              <button class="secondary wide" data-complete-goal="short">完成</button>
-            </article>
-            <article data-goal-card="long">
-              <div class="goal-card-head">
-                <span>长期目标</span>
-                <button class="text-button" type="button" data-goal-reward="long">奖励</button>
-              </div>
-              <strong id="sheetActiveLong">未设置</strong>
-              <small id="sheetLongReward" class="muted">未设置奖励</small>
-              <button class="secondary wide" data-complete-goal="long">完成</button>
-            </article>
-          </div>
-          <form id="goalForm" class="stack-form">
+          <form id="goalForm" class="stack-form goal-create-form">
             <select id="goalType">
               <option value="short">设为当前短期目标</option>
               <option value="nextShort">设为下一个短期目标</option>
             </select>
             <input id="goalTitle" placeholder="写下一个目标">
+            <input id="goalReward" type="number" min="0" step="1" placeholder="完成奖励（欧，可选）">
             <button class="primary wide" type="submit">保存目标</button>
           </form>
-          <div id="backlogGoals" class="small-list"></div>
+          <div class="goal-row">
+            <article data-goal-card="short">
+              <div class="goal-card-head">
+                <span>正在进行的短期目标</span>
+              </div>
+              <strong id="sheetActiveShort">未设置</strong>
+              <small id="sheetShortReward" class="muted">未设置奖励</small>
+              <button class="secondary wide" data-complete-goal="short">完成</button>
+            </article>
+          </div>
+          <div id="backlogGoals" class="goal-trees"></div>
         </div>
 
         <form id="redeemForm" class="sheet-panel" data-panel="piggy">

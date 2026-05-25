@@ -3014,3 +3014,111 @@ body[data-view="review"] #reviewView > .reader-panel::after {
 .method-editor-panel .method-flow-preview {
   min-height: 168px;
 }
+
+.goal-create-form {
+  order: -2;
+}
+
+.goal-trees {
+  display: grid;
+  gap: 10px;
+}
+
+.goal-tree {
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.58);
+  overflow: hidden;
+}
+
+.goal-tree summary {
+  min-height: 46px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--cocoa);
+  font-weight: 800;
+}
+
+.goal-tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.goal-tree summary::before {
+  content: "›";
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--plum);
+  background: rgba(130, 115, 163, 0.1);
+  transform: rotate(0deg);
+  transition: transform 160ms ease;
+}
+
+.goal-tree[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.goal-tree summary span {
+  margin-right: auto;
+}
+
+.goal-tree summary small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.goal-tree-list {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.goal-history-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(248, 247, 242, 0.92);
+  box-shadow: 0 10px 22px rgba(26, 32, 44, 0.05);
+}
+
+.goal-history-card strong {
+  font-size: 15px;
+}
+
+.goal-history-card small,
+.goal-history-card span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.goal-history-card.completed {
+  opacity: 0.88;
+}
+
+body[data-view="method"] #methodView > .quiet-panel,
+body[data-view="review"] #reviewView > .reader-panel {
+  background: transparent !important;
+}
+
+.date-strip {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  background: transparent !important;
+}
+
+.date-chip {
+  flex-shrink: 0;
+}
+
+.daily-summary-card {
+  background: rgba(255, 255, 255, 0.78) !important;
+}
