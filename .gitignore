@@ -1,3 +1,4 @@
 data/
 .superpowers/
 output/
+.playwright-cli/
