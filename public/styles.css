@@ -2315,3 +2315,152 @@ textarea {
     padding: 15px 16px;
   }
 }
+
+/* Browser-comment refinements */
+.hero-card::before {
+  display: none;
+}
+
+.muyu-home .section-head .text-button {
+  display: none;
+}
+
+.ritual-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bottom-nav {
+  width: min(250px, calc(100vw - 80px));
+  padding: 8px 18px;
+  border-radius: 24px;
+}
+
+.nav-item {
+  min-height: 30px;
+  gap: 0;
+}
+
+.nav-item small {
+  display: none;
+}
+
+.nav-item span {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-item.active::after {
+  margin-top: 2px;
+}
+
+body[data-view="method"],
+body[data-view="review"] {
+  background: #fbfaf8;
+}
+
+body[data-view="method"] .app-main,
+body[data-view="review"] .app-main {
+  width: 100%;
+  max-width: none;
+  padding: 0 0 76px;
+}
+
+body[data-view="method"] #methodView,
+body[data-view="review"] #reviewView {
+  width: 100%;
+}
+
+body[data-view="method"] #methodView > .quiet-panel,
+body[data-view="review"] #reviewView > .reader-panel {
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(130, 115, 163, 0.08), transparent 15rem),
+    linear-gradient(180deg, #fbfaf8 0%, #f7f3f7 100%);
+  padding: 28px min(28px, 6vw) 96px;
+}
+
+body[data-view="method"] #methodView > .quiet-panel::after,
+body[data-view="review"] #reviewView > .reader-panel::after {
+  display: none;
+}
+
+.method-preview {
+  cursor: pointer;
+}
+
+.method-preview:focus-visible {
+  outline: 3px solid rgba(130, 115, 163, 0.5);
+  outline-offset: 4px;
+}
+
+.bottom-sheet {
+  max-height: min(92vh, 860px);
+}
+
+.method-canvas-shell {
+  min-height: 330px;
+}
+
+.home-muyu {
+  width: 128px;
+  height: 98px;
+}
+
+.home-muyu .muyu-body,
+.muyu-body {
+  position: relative;
+  width: 118px;
+  height: 70px;
+  border-radius: 48% 52% 43% 46%;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.22), transparent 16%),
+    radial-gradient(circle at 46% 36%, #3b3642 0%, #1f1c24 62%, #0c0b0f 100%);
+  box-shadow:
+    inset -18px -20px 16px rgba(0, 0, 0, 0.48),
+    inset 14px 12px 16px rgba(255, 255, 255, 0.08),
+    0 18px 32px rgba(22, 18, 28, 0.24);
+}
+
+.home-muyu .muyu-body::after,
+.muyu-body::after {
+  content: "";
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: 19%;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  filter: blur(3px);
+}
+
+.home-muyu .muyu-stick,
+.muyu-stick {
+  top: 20px;
+  right: 0;
+  width: 92px;
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #1d1a20, #34303c 52%, #0f0d12);
+  box-shadow:
+    inset 0 3px 3px rgba(255, 255, 255, 0.12),
+    0 7px 12px rgba(0, 0, 0, 0.2);
+  transform: rotate(-23deg);
+}
+
+@media (max-width: 620px) {
+  .bottom-nav {
+    width: min(250px, calc(100vw - 80px));
+    padding: 8px 18px;
+  }
+
+  .ritual-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

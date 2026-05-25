@@ -25,8 +25,80 @@ const SHEETS = {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const STORAGE_KEY = 'lulu-life-methodology-data-v1';
+const API_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+const isStaticMode = !API_HOSTS.has(window.location.hostname);
+
+function createDefaultData() {
+  return {
+    version: 1,
+    quickNotes: [],
+    goals: {
+      activeShort: null,
+      activeLong: null,
+      backlog: [],
+      completed: [],
+    },
+    successEntries: [],
+    gratitudeEntries: [],
+    mistakeEntries: [],
+    habit: {
+      current: null,
+      records: [],
+    },
+    piggyBank: {
+      balance: 0,
+      transactions: [],
+      redemptions: [],
+    },
+    methodologies: [],
+    affirmation: {
+      text: '我越来越稳定、清明、有力量',
+      count: 0,
+      targetCount: 100000,
+      history: [],
+      updatedAt: now(),
+    },
+  };
+}
+
+function ensureData(data) {
+  const defaults = createDefaultData();
+  return {
+    ...defaults,
+    ...(data || {}),
+    goals: { ...defaults.goals, ...((data && data.goals) || {}) },
+    habit: { ...defaults.habit, ...((data && data.habit) || {}) },
+    piggyBank: { ...defaults.piggyBank, ...((data && data.piggyBank) || {}) },
+    affirmation: { ...defaults.affirmation, ...((data && data.affirmation) || {}) },
+  };
+}
+
+function readStaticData() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return createDefaultData();
+  try {
+    return ensureData(JSON.parse(saved));
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return createDefaultData();
+  }
+}
+
+function writeStaticData(data) {
+  const saved = ensureData(data);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  return saved;
+}
 
 async function api(path, options = {}) {
+  if (isStaticMode && path === '/api/data') {
+    if ((options.method || 'GET').toUpperCase() === 'PUT') {
+      return writeStaticData(JSON.parse(options.body || '{}'));
+    }
+    return readStaticData();
+  }
+
   const response = await fetch(path, options);
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }));
@@ -349,7 +421,7 @@ function methodPreviewMarkup(method) {
   const canvas = defaultCanvasFromLegacy(method);
   const bounds = canvasBounds(canvas);
   return `
-    <div class="method-preview">
+    <div class="method-preview" data-edit-method="${method.id}" role="button" tabindex="0" aria-label="编辑方法论画布">
       <div class="method-preview-canvas" style="width:${bounds.width}px;height:${bounds.height}px;--preview-scale:1">
         <div style="position:absolute;left:${-bounds.x}px;top:${-bounds.y}px">
           ${renderCanvasMarkup(canvas, { markerId: `previewArrow-${method.id}` })}
@@ -614,6 +686,14 @@ function completeGoal(type) {
 async function uploadPhoto(input) {
   const file = input.files?.[0];
   if (!file) return null;
+  if (isStaticMode) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('照片读取失败'));
+      reader.readAsDataURL(file);
+    });
+  }
   const response = await fetch('/api/upload', {
     method: 'POST',
     headers: { 'X-File-Name': encodeURIComponent(file.name) },
@@ -908,6 +988,14 @@ function bindForms() {
     if (!button) return;
     state.data.methodologies = state.data.methodologies.filter((method) => method.id !== button.dataset.deleteMethod);
     await saveData();
+  });
+
+  $('#methodList').addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const editTarget = event.target.closest('[data-edit-method]');
+    if (!editTarget) return;
+    event.preventDefault();
+    editMethod(editTarget.dataset.editMethod);
   });
 
   $$('.canvas-tools [data-canvas-tool]').forEach((button) => {
