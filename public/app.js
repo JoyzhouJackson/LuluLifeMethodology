@@ -206,10 +206,9 @@ function renderGoals() {
   $('#sheetShortReward').textContent = shortReward ? `完成奖励 ${shortReward} 欧` : '未设置奖励';
   $('#sheetLongReward').textContent = longReward ? `完成奖励 ${longReward} 欧` : '未设置奖励';
 
-  const goals = activeGoals();
-  $('#successGoal').innerHTML = goals.length
-    ? goals.map((goal) => `<option value="${goal.id}">${escapeHtml(goal.title)}</option>`).join('')
-    : '<option value="">暂未关联目标</option>';
+  $('#successGoal').innerHTML = ['科研', '搞钱', '身体', '语言', '修炼']
+    .map((category) => `<option value="${category}">${category}</option>`)
+    .join('');
 
   $('#backlogGoals').innerHTML = state.data.goals.backlog.length
     ? state.data.goals.backlog
@@ -218,6 +217,7 @@ function renderGoals() {
             <div class="small-item">
               <div class="row">
                 <span>${escapeHtml(goal.title)}</span>
+                <small>${new Date(goal.createdAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>
                 <span>
                   <button class="secondary" data-promote="${goal.id}" data-type="short">短期</button>
                   <button class="secondary" data-promote="${goal.id}" data-type="long">长期</button>
@@ -227,14 +227,21 @@ function renderGoals() {
           `
         )
         .join('')
-    : '<p class="empty">待实现目标会显示在这里。</p>';
+    : '<p class="empty">还没有下一个目标。</p>';
 }
 
 function syncGoalForm(type) {
   const slot = type === 'long' ? 'activeLong' : 'activeShort';
   const active = state.data?.goals?.[slot];
+  const isLong = type === 'long';
+  $('#goalType').innerHTML = isLong
+    ? '<option value="long">设为当前长期目标</option><option value="nextLong">设为下一个长期目标</option>'
+    : '<option value="short">设为当前短期目标</option><option value="nextShort">设为下一个短期目标</option>';
   $('#goalType').value = type;
   $('#goalTitle').value = active?.title || '';
+  $$('[data-goal-card]').forEach((card) => {
+    card.hidden = card.dataset.goalCard !== type;
+  });
 }
 
 function renderCoins(selector, count, compact = false) {
@@ -440,17 +447,67 @@ function canvasBounds(canvas) {
   };
 }
 
-function methodPreviewMarkup(method) {
-  const canvas = defaultCanvasFromLegacy(method);
-  const bounds = canvasBounds(canvas);
+function methodLinesFromMethod(method) {
+  if (!method) return [];
+  if (method.flowText) {
+    return method.flowText.split('\n').map((line) => line.trim()).filter(Boolean);
+  }
+  return (method.nodes || method.canvas?.nodes || [])
+    .map((item) => (typeof item === 'string' ? item : item.text))
+    .map((line) => String(line || '').trim())
+    .filter(Boolean);
+}
+
+function methodFlowMarkup(lines) {
+  const cleanLines = lines.map((line) => line.trim()).filter(Boolean);
   return `
-    <div class="method-preview" data-edit-method="${method.id}" role="button" tabindex="0" aria-label="编辑方法论画布">
-      <div class="method-preview-canvas" style="width:${bounds.width}px;height:${bounds.height}px;--preview-scale:1">
-        <div style="position:absolute;left:${-bounds.x}px;top:${-bounds.y}px">
-          ${renderCanvasMarkup(canvas, { markerId: `previewArrow-${method.id}` })}
-        </div>
-      </div>
+    <div class="method-flow-text">
+      <span class="flow-type">text</span>
+      ${cleanLines.length
+        ? cleanLines.map((line, index) => `
+            <div class="flow-line">${escapeHtml(line)}</div>
+            ${index < cleanLines.length - 1 ? '<div class="flow-arrow">↓</div>' : ''}
+          `).join('')
+        : '<p class="empty">每行写一步，保存后会生成清晰的流程卡片。</p>'}
     </div>
+  `;
+}
+
+function canvasFromLines(lines) {
+  const cleanLines = lines.map((line) => line.trim()).filter(Boolean);
+  const nodes = cleanLines.map((line, index) => ({
+    id: makeId('canvas-node'),
+    type: 'rect',
+    text: line,
+    x: 78,
+    y: 42 + index * 86,
+    w: 560,
+    h: 56,
+  }));
+  return {
+    nodes,
+    arrows: nodes.slice(1).map((node, index) => ({
+      id: makeId('canvas-arrow'),
+      type: 'straight',
+      from: nodes[index].id,
+      to: node.id,
+    })),
+  };
+}
+
+function renderMethodFlowPreview() {
+  const target = $('#methodFlowPreview');
+  if (!target) return;
+  const lines = ($('#methodLines')?.value || '').split('\n');
+  target.innerHTML = methodFlowMarkup(lines);
+}
+
+function methodPreviewMarkup(method) {
+  const lines = methodLinesFromMethod(method);
+  return `
+    <button class="method-flow-card" data-edit-method="${method.id}" type="button" aria-label="编辑方法论">
+      ${methodFlowMarkup(lines)}
+    </button>
   `;
 }
 
@@ -620,7 +677,9 @@ function resetMethodEditor(method = null) {
   $('#methodEditingId').value = method?.id || '';
   $('#methodTitle').value = method?.title || '';
   $('#methodCategory').value = method?.category || '自我修炼';
-  $('#canvasTextEditor').value = '';
+  if ($('#methodLines')) $('#methodLines').value = methodLinesFromMethod(method).join('\n');
+  if ($('#canvasTextEditor')) $('#canvasTextEditor').value = '';
+  renderMethodFlowPreview();
   renderMethodEditor();
 }
 
@@ -640,7 +699,7 @@ function renderMethodEditor() {
     button.classList.toggle('active', button.dataset.canvasTool === state.canvas.activeTool);
   });
   const selected = selectedCanvasNode();
-  $('#canvasTextEditor').value = selected?.text || '';
+  if ($('#canvasTextEditor')) $('#canvasTextEditor').value = selected?.text || '';
 }
 
 function addCanvasNode(type) {
@@ -859,10 +918,10 @@ function bindForms() {
     const type = $('#goalType').value;
     if (!title) return;
 
-    if (type === 'backlog') {
+    if (type === 'nextShort' || type === 'nextLong') {
       state.data.goals.backlog.unshift({
         id: makeId('backlog-goal'),
-        type: 'other',
+        type: type === 'nextShort' ? 'short' : 'long',
         title,
         createdAt: now(),
         status: 'backlog',
@@ -886,7 +945,7 @@ function bindForms() {
       }
     }
     await saveData();
-    syncGoalForm(type);
+    syncGoalForm(type === 'long' || type === 'nextLong' ? 'long' : 'short');
   });
 
   $('#backlogGoals').addEventListener('click', async (event) => {
@@ -918,7 +977,7 @@ function bindForms() {
     if (!eventText) return;
     addEntry('successEntries', {
       event: eventText,
-      goalId: $('#successGoal').value || null,
+      category: $('#successGoal').value || '修炼',
       lesson: $('#successLesson').value.trim(),
     });
     event.target.reset();
@@ -1039,13 +1098,19 @@ function bindForms() {
   $('#methodForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const title = $('#methodTitle').value.trim();
-    if (!title || !state.canvas.nodes.length) return;
+    const lines = $('#methodLines').value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (!title || !lines.length) return;
+    const canvas = canvasFromLines(lines);
     const payload = {
       title,
       category: $('#methodCategory').value,
-      template: 'canvas',
-      canvas: cloneCanvas(state.canvas),
-      nodes: state.canvas.nodes.map((node) => node.text),
+      template: 'text-flow',
+      flowText: lines.join('\n'),
+      canvas,
+      nodes: lines,
     };
     const editingId = $('#methodEditingId').value;
     if (editingId) {
@@ -1099,16 +1164,18 @@ function bindForms() {
     });
   });
 
-  $('#deleteCanvasSelection').addEventListener('click', deleteCanvasSelection);
+  $('#deleteCanvasSelection')?.addEventListener('click', deleteCanvasSelection);
 
-  $('#canvasTextEditor').addEventListener('input', () => {
+  $('#methodLines')?.addEventListener('input', renderMethodFlowPreview);
+
+  $('#canvasTextEditor')?.addEventListener('input', () => {
     const selected = selectedCanvasNode();
     if (!selected) return;
     selected.text = $('#canvasTextEditor').value;
     renderMethodEditor();
   });
 
-  $('#methodCanvas').addEventListener('pointerdown', (event) => {
+  $('#methodCanvas')?.addEventListener('pointerdown', (event) => {
     const arrowHit = event.target.closest('.canvas-arrow-hit');
     if (arrowHit) {
       state.canvas.selectedId = arrowHit.dataset.arrowId;

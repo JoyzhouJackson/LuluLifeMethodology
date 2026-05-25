@@ -118,7 +118,9 @@
               <p class="eyebrow">📜 Daily Page</p>
               <h2 id="dailyDate">今日书页</h2>
             </div>
-            <button class="secondary menu-toggle" id="refreshDaily" aria-label="展开日历">☰</button>
+            <button class="secondary menu-toggle" id="refreshDaily" aria-label="展开日历">
+              <span></span><span></span><span></span>
+            </button>
           </div>
           <div class="calendar-controls" id="calendarControls" hidden>
             <select id="calendarYear" aria-label="选择年份"></select>
@@ -131,15 +133,27 @@
 
     <nav class="bottom-nav" aria-label="底部菜单">
       <button class="nav-item active" data-view="home" aria-label="首页">
-        <span class="nav-icon pen-icon"></span>
+        <svg viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M18.6 4.8l4.6 4.6M6.3 21.7l4.9-1.1L22 9.8l-3.8-3.8L7.4 16.8l-1.1 4.9z"/>
+          <path d="M6.2 22.1h15.2"/>
+        </svg>
         <small>首页</small>
       </button>
       <button class="nav-item" data-view="method" aria-label="方法论">
-        <span class="nav-icon flow-icon"></span>
+        <svg viewBox="0 0 28 28" aria-hidden="true">
+          <rect x="4.5" y="5" width="7" height="6" rx="2"/>
+          <rect x="16.5" y="17" width="7" height="6" rx="2"/>
+          <path d="M11.5 8h5a3 3 0 0 1 3 3v6"/>
+          <path d="M17.2 14.6l2.3 2.4 2.3-2.4"/>
+        </svg>
         <small>方法论</small>
       </button>
       <button class="nav-item" data-view="review" aria-label="书页">
-        <span class="nav-icon calendar-icon"></span>
+        <svg viewBox="0 0 28 28" aria-hidden="true">
+          <rect x="5" y="6.8" width="18" height="16" rx="4"/>
+          <path d="M9 4.8v4M19 4.8v4M5.5 12h17"/>
+          <path d="M10 16h2M16 16h2M10 20h2M16 20h2"/>
+        </svg>
         <small>书页</small>
       </button>
     </nav>
@@ -217,7 +231,7 @@
 
         <div class="sheet-panel" data-panel="goals">
           <div class="goal-row">
-            <article>
+            <article data-goal-card="short">
               <div class="goal-card-head">
                 <span>短期目标</span>
                 <button class="text-button" type="button" data-goal-reward="short">奖励</button>
@@ -226,7 +240,7 @@
               <small id="sheetShortReward" class="muted">未设置奖励</small>
               <button class="secondary wide" data-complete-goal="short">完成</button>
             </article>
-            <article>
+            <article data-goal-card="long">
               <div class="goal-card-head">
                 <span>长期目标</span>
                 <button class="text-button" type="button" data-goal-reward="long">奖励</button>
@@ -238,9 +252,8 @@
           </div>
           <form id="goalForm" class="stack-form">
             <select id="goalType">
-              <option value="short">设为短期目标</option>
-              <option value="long">设为长期目标</option>
-              <option value="backlog">放入待实现目标</option>
+              <option value="short">设为当前短期目标</option>
+              <option value="nextShort">设为下一个短期目标</option>
             </select>
             <input id="goalTitle" placeholder="写下一个目标">
             <button class="primary wide" type="submit">保存目标</button>
@@ -278,19 +291,8 @@
             <option>事业成长</option>
             <option>商业变现</option>
           </select>
-          <div class="canvas-tools" aria-label="画布工具">
-            <button type="button" class="secondary" data-canvas-tool="rect">□ 方框</button>
-            <button type="button" class="secondary" data-canvas-tool="diamond">◇ 菱形</button>
-            <button type="button" class="secondary" data-canvas-tool="arrow">→ 箭头</button>
-            <button type="button" class="secondary" data-canvas-tool="elbow">┐ 直角箭头</button>
-            <button type="button" class="secondary" data-canvas-tool="note">A 备注</button>
-            <button type="button" class="secondary danger-lite" id="deleteCanvasSelection">删除选中</button>
-          </div>
-          <p class="field-hint">点击工具新增元素；拖动方框、菱形和备注调整位置；选中箭头后再点两个图形，箭头会自动吸附到边的中心点。</p>
-          <div class="method-canvas-shell">
-            <div id="methodCanvas" class="method-canvas"></div>
-          </div>
-          <textarea id="canvasTextEditor" class="canvas-text-editor" placeholder="编辑选中内容"></textarea>
+          <textarea id="methodLines" class="large-input" placeholder="每行写一步，例如：&#10;域名 fanji.yululab.com&#10;阿里云 OSS 静态网站托管 / 腾讯云 COS 静态网站托管&#10;可选：阿里云 CDN / 腾讯云 CDN&#10;用户打开翻记 PWA"></textarea>
+          <div id="methodFlowPreview" class="method-flow-preview" aria-label="方法论预览"></div>
           <button class="primary wide" type="submit">保存方法论</button>
         </form>
       </div>
