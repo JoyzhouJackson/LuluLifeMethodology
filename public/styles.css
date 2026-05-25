@@ -3122,3 +3122,85 @@ body[data-view="review"] #reviewView > .reader-panel {
 .daily-summary-card {
   background: rgba(255, 255, 255, 0.78) !important;
 }
+
+@media (min-width: 720px) {
+  body[data-view="home"] .app-header,
+  body[data-view="home"] .app-main {
+    width: min(920px, calc(100vw - 56px));
+    max-width: 920px;
+  }
+
+  body[data-view="home"] .entry-actions,
+  body[data-view="home"] .ritual-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  body[data-view="home"] .app-header,
+  body[data-view="home"] .app-main {
+    width: min(980px, calc(100vw - 96px));
+    max-width: 980px;
+  }
+}
+
+.sheet-backdrop.is-open {
+  z-index: 9998;
+}
+
+.bottom-sheet.is-open {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: 0 !important;
+  z-index: 9999;
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0) !important;
+}
+
+.bottom-sheet.is-open .sheet-panel.active {
+  display: grid !important;
+}
+
+body[data-view="review"] #reviewView,
+body[data-view="review"] #reviewView > .reader-panel,
+body[data-view="review"] #dailyPage,
+body[data-view="review"] .daily-page,
+body[data-view="review"] .date-strip,
+body[data-view="review"] .today-book-section,
+body[data-view="review"] .daily-summary {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+body[data-view="review"] .date-strip::before,
+body[data-view="review"] .date-strip::after,
+body[data-view="review"] .today-book-section::before,
+body[data-view="review"] .today-book-section::after,
+body[data-view="review"] .daily-summary::before,
+body[data-view="review"] .daily-summary::after {
+  display: none !important;
+}
+
+.date-chip.today {
+  position: relative;
+}
+
+.date-chip.today::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--purple);
+  transform: translateX(-50%);
+}
+
+.date-chip.active.today::after {
+  background: rgba(255, 255, 255, 0.82);
+}

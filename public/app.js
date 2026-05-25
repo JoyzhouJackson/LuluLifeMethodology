@@ -172,6 +172,8 @@ function openSheet(name) {
   $$('.sheet-panel').forEach((panel) => panel.classList.toggle('active', panel.dataset.panel === name));
   $('#sheetBackdrop').hidden = false;
   $('#bottomSheet').hidden = false;
+  $('#sheetBackdrop').classList.add('is-open');
+  $('#bottomSheet').classList.add('is-open');
   document.body.style.overflow = 'hidden';
   const firstField = $(`.sheet-panel[data-panel="${name}"] textarea, .sheet-panel[data-panel="${name}"] input, .sheet-panel[data-panel="${name}"] select`);
   setTimeout(() => firstField?.focus(), 120);
@@ -185,6 +187,8 @@ function openGoalEditor(type) {
 
 function closeSheet() {
   state.activeSheet = null;
+  $('#sheetBackdrop').classList.remove('is-open');
+  $('#bottomSheet').classList.remove('is-open');
   $('#sheetBackdrop').hidden = true;
   $('#bottomSheet').hidden = true;
   document.body.style.overflow = '';
@@ -253,11 +257,11 @@ function renderGoals() {
 
   $('#backlogGoals').innerHTML = `
     <details class="goal-tree">
-      <summary><span>未完成的树</span><small>${pendingGoals.length} 个</small></summary>
+      <summary><span>未完成</span><small>${pendingGoals.length} 个</small></summary>
       <div class="goal-tree-list">${pendingCards}</div>
     </details>
     <details class="goal-tree">
-      <summary><span>已完成的树</span><small>${completedGoals.length} 个</small></summary>
+      <summary><span>已完成</span><small>${completedGoals.length} 个</small></summary>
       <div class="goal-tree-list">${completedCards}</div>
     </details>
   `;
@@ -650,13 +654,18 @@ function dateKey(date) {
 
 function dateStripMarkup() {
   const selectedDate = state.reviewDate || new Date();
-  return Array.from({ length: 9 }, (_, index) => {
-    const date = new Date(selectedDate);
-    date.setDate(selectedDate.getDate() + index - 4);
-    const active = date.toDateString() === selectedDate.toDateString();
+  const todayKey = dateKey(new Date());
+  const year = selectedDate.getFullYear();
+  const month = selectedDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const date = new Date(year, month, index + 1, 12, 0, 0);
+    const key = dateKey(date);
+    const active = key === dateKey(selectedDate);
+    const isToday = key === todayKey;
     const week = date.toLocaleDateString('zh-CN', { weekday: 'short' });
     return `
-      <button class="date-chip${active ? ' active' : ''}" type="button" data-date="${dateKey(date)}">
+      <button class="date-chip${active ? ' active' : ''}${isToday ? ' today' : ''}" type="button" data-date="${key}">
         <span>${week}</span>
         <strong>${date.getDate()}</strong>
       </button>
