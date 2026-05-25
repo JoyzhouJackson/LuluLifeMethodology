@@ -2,6 +2,9 @@ const state = {
   data: null,
   audioContext: null,
   activeSheet: null,
+  goalEditingType: 'short',
+  reviewDate: new Date(),
+  calendarOpen: false,
   canvas: {
     nodes: [],
     arrows: [],
@@ -159,6 +162,9 @@ function openSheet(name) {
   if (name === 'method' && !state.canvas.editingFromCard) {
     resetMethodEditor();
   }
+  if (name === 'goals') {
+    syncGoalForm(state.goalEditingType || 'short');
+  }
   state.canvas.editingFromCard = false;
   state.activeSheet = name;
   $('#sheetEyebrow').textContent = labels[0];
@@ -169,6 +175,12 @@ function openSheet(name) {
   document.body.style.overflow = 'hidden';
   const firstField = $(`.sheet-panel[data-panel="${name}"] textarea, .sheet-panel[data-panel="${name}"] input, .sheet-panel[data-panel="${name}"] select`);
   setTimeout(() => firstField?.focus(), 120);
+}
+
+function openGoalEditor(type) {
+  state.goalEditingType = type;
+  openSheet('goals');
+  syncGoalForm(type);
 }
 
 function closeSheet() {
@@ -185,10 +197,14 @@ function activeGoals() {
 function renderGoals() {
   const shortTitle = state.data.goals.activeShort?.title || '未设置';
   const longTitle = state.data.goals.activeLong?.title || '未设置';
+  const shortReward = Number(state.data.goals.activeShort?.rewardAmount || 0);
+  const longReward = Number(state.data.goals.activeLong?.rewardAmount || 0);
   $('#activeShort').textContent = shortTitle;
   $('#activeLong').textContent = longTitle;
   $('#sheetActiveShort').textContent = shortTitle;
   $('#sheetActiveLong').textContent = longTitle;
+  $('#sheetShortReward').textContent = shortReward ? `完成奖励 ${shortReward} 欧` : '未设置奖励';
+  $('#sheetLongReward').textContent = longReward ? `完成奖励 ${longReward} 欧` : '未设置奖励';
 
   const goals = activeGoals();
   $('#successGoal').innerHTML = goals.length
@@ -214,6 +230,13 @@ function renderGoals() {
     : '<p class="empty">待实现目标会显示在这里。</p>';
 }
 
+function syncGoalForm(type) {
+  const slot = type === 'long' ? 'activeLong' : 'activeShort';
+  const active = state.data?.goals?.[slot];
+  $('#goalType').value = type;
+  $('#goalTitle').value = active?.title || '';
+}
+
 function renderCoins(selector, count, compact = false) {
   const maxLeft = compact ? 98 : 220;
   const baseLeft = compact ? 18 : 28;
@@ -233,9 +256,9 @@ function renderPiggyBank() {
 
   $('#bankBalance').textContent = `${balance} 欧`;
   if ($('#homePiggyFill')) $('#homePiggyFill').style.height = fill;
-  $('#sheetPiggyFill').style.height = fill;
+  if ($('#sheetPiggyFill')) $('#sheetPiggyFill').style.height = fill;
   if ($('#homeCoinLayer')) renderCoins('#homeCoinLayer', coinCount, true);
-  renderCoins('#sheetCoinLayer', coinCount, false);
+  if ($('#sheetCoinLayer')) renderCoins('#sheetCoinLayer', coinCount, false);
 }
 
 function renderAffirmation() {
@@ -480,9 +503,9 @@ function fitMethodPreviews() {
   });
 }
 
-function createDailyPage(data) {
+function createDailyPage(data, date = new Date()) {
   return {
-    date: new Date().toLocaleDateString('zh-CN', {
+    date: date.toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -496,15 +519,19 @@ function createDailyPage(data) {
   };
 }
 
+function dateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 function dateStripMarkup() {
-  const today = new Date();
+  const selectedDate = state.reviewDate || new Date();
   return Array.from({ length: 9 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + index - 4);
-    const active = date.toDateString() === today.toDateString();
-    const week = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const date = new Date(selectedDate);
+    date.setDate(selectedDate.getDate() + index - 4);
+    const active = date.toDateString() === selectedDate.toDateString();
+    const week = date.toLocaleDateString('zh-CN', { weekday: 'short' });
     return `
-      <button class="date-chip${active ? ' active' : ''}" type="button">
+      <button class="date-chip${active ? ' active' : ''}" type="button" data-date="${dateKey(date)}">
         <span>${week}</span>
         <strong>${date.getDate()}</strong>
       </button>
@@ -531,16 +558,32 @@ function bookSection(title, items) {
   `;
 }
 
+function renderCalendarControls() {
+  const selectedDate = state.reviewDate || new Date();
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
+  $('#calendarYear').innerHTML = years
+    .map((year) => `<option value="${year}"${year === selectedDate.getFullYear() ? ' selected' : ''}>${year} 年</option>`)
+    .join('');
+  $('#calendarMonth').innerHTML = Array.from({ length: 12 }, (_, index) => {
+    const month = index + 1;
+    return `<option value="${index}"${index === selectedDate.getMonth() ? ' selected' : ''}>${month} 月</option>`;
+  }).join('');
+  $('#calendarControls').hidden = !state.calendarOpen;
+  $('#refreshDaily').classList.toggle('active', state.calendarOpen);
+}
+
 function renderDailyPage() {
-  const page = createDailyPage(state.data);
-  $('#dailyDate').textContent = 'My Journal';
+  const selectedDate = state.reviewDate || new Date();
+  const page = createDailyPage(state.data, selectedDate);
+  $('#dailyDate').textContent = '我的日记';
   $('#dailyPage').innerHTML = `
     <section class="date-strip" aria-label="选择日期">
       ${dateStripMarkup()}
     </section>
     <section class="today-book-section">
       <div class="inline-section-head">
-        <h3>Today’s Pages</h3>
+        <h3>今日书页</h3>
         <span>${page.date}</span>
       </div>
       <div class="daily-summary">
@@ -555,6 +598,7 @@ function renderDailyPage() {
     </section>
   `;
   $('#dailyPage').classList.remove('daily-summary');
+  renderCalendarControls();
 }
 
 function renderAll() {
@@ -591,7 +635,7 @@ function renderMethodEditor() {
     markerId: 'editorArrowHead',
     selectedId: state.canvas.selectedId,
     interactive: true,
-  });
+  }) + (!state.canvas.nodes.length ? '<div class="canvas-empty">先点上方工具添加方框、菱形、箭头或备注。</div>' : '');
   $$('.canvas-tools [data-canvas-tool]').forEach((button) => {
     button.classList.toggle('active', button.dataset.canvasTool === state.canvas.activeTool);
   });
@@ -670,6 +714,26 @@ function addPiggyTransaction(amount, reason, sourceId) {
   });
 }
 
+function setGoalReward(type) {
+  const slot = type === 'short' ? 'activeShort' : 'activeLong';
+  const active = state.data.goals[slot];
+  if (!active) {
+    alert('先设置这个目标，再设置奖励。');
+    return;
+  }
+  const current = active.rewardAmount || '';
+  const value = prompt('设置完成这个目标后给自己的奖励金额（欧）', current);
+  if (value === null) return;
+  const amount = Math.max(0, Math.floor(Number(value)));
+  if (!Number.isFinite(amount)) {
+    alert('请输入有效金额。');
+    return;
+  }
+  active.rewardAmount = amount;
+  active.updatedAt = now();
+  saveData();
+}
+
 function completeGoal(type) {
   const slot = type === 'short' ? 'activeShort' : 'activeLong';
   const active = state.data.goals[slot];
@@ -679,7 +743,10 @@ function completeGoal(type) {
   }
   state.data.goals.completed.unshift({ ...active, status: 'completed', completedAt: now() });
   state.data.goals[slot] = null;
-  addPiggyTransaction(type === 'short' ? 50 : 200, type === 'short' ? '短期目标完成' : '长期目标完成', active.id);
+  const rewardAmount = Number(active.rewardAmount || 0);
+  if (rewardAmount > 0) {
+    addPiggyTransaction(rewardAmount, type === 'short' ? '短期目标完成奖励' : '长期目标完成奖励', active.id);
+  }
   saveData();
 }
 
@@ -732,24 +799,37 @@ async function hitMuyu(button) {
 
 function bindNavigation() {
   document.body.dataset.view = 'home';
-  $$('.nav-item').forEach((button) => {
-    button.addEventListener('click', () => {
-      $$('.nav-item').forEach((item) => item.classList.remove('active'));
-      $$('.view').forEach((view) => view.classList.remove('active'));
-      button.classList.add('active');
-      $(`#${button.dataset.view}View`).classList.add('active');
-      document.body.dataset.view = button.dataset.view;
-      closeSheet();
-      if (button.dataset.view === 'method') {
-        requestAnimationFrame(fitMethodPreviews);
-      }
-    });
+  document.addEventListener('click', (event) => {
+    const goalButton = event.target.closest('[data-goal-edit]');
+    if (goalButton) {
+      openGoalEditor(goalButton.dataset.goalEdit);
+      return;
+    }
+
+    const navButton = event.target.closest('.nav-item');
+    if (!navButton) return;
+    $$('.nav-item').forEach((item) => item.classList.remove('active'));
+    $$('.view').forEach((view) => view.classList.remove('active'));
+    navButton.classList.add('active');
+    $(`#${navButton.dataset.view}View`)?.classList.add('active');
+    document.body.dataset.view = navButton.dataset.view;
+    closeSheet();
+    if (navButton.dataset.view === 'method') {
+      requestAnimationFrame(fitMethodPreviews);
+    }
   });
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-sheet]');
     if (!button) return;
     openSheet(button.dataset.sheet);
+  });
+
+  document.addEventListener('click', (event) => {
+    const dateButton = event.target.closest('[data-date]');
+    if (!dateButton) return;
+    state.reviewDate = new Date(`${dateButton.dataset.date}T12:00:00`);
+    renderDailyPage();
   });
 
   $('#closeSheet').addEventListener('click', closeSheet);
@@ -790,19 +870,23 @@ function bindForms() {
     } else {
       const slot = type === 'short' ? 'activeShort' : 'activeLong';
       if (state.data.goals[slot]) {
-        alert(`当前${type === 'short' ? '短期' : '长期'}目标需要先完成，不能直接替换。`);
-        return;
+        state.data.goals[slot] = {
+          ...state.data.goals[slot],
+          title,
+          updatedAt: now(),
+        };
+      } else {
+        state.data.goals[slot] = {
+          id: makeId(`${type}-goal`),
+          type,
+          title,
+          createdAt: now(),
+          status: 'active',
+        };
       }
-      state.data.goals[slot] = {
-        id: makeId(`${type}-goal`),
-        type,
-        title,
-        createdAt: now(),
-        status: 'active',
-      };
     }
-    event.target.reset();
     await saveData();
+    syncGoalForm(type);
   });
 
   $('#backlogGoals').addEventListener('click', async (event) => {
@@ -822,6 +906,10 @@ function bindForms() {
 
   $$('[data-complete-goal]').forEach((button) => {
     button.addEventListener('click', () => completeGoal(button.dataset.completeGoal));
+  });
+
+  $$('[data-goal-reward]').forEach((button) => {
+    button.addEventListener('click', () => setGoalReward(button.dataset.goalReward));
   });
 
   $('#successForm').addEventListener('submit', async (event) => {
@@ -1057,7 +1145,20 @@ function bindForms() {
     document.addEventListener('pointercancel', up);
   });
 
-  $('#refreshDaily').addEventListener('click', renderDailyPage);
+  $('#refreshDaily').addEventListener('click', () => {
+    state.calendarOpen = !state.calendarOpen;
+    renderCalendarControls();
+  });
+
+  $('#calendarYear').addEventListener('change', () => {
+    state.reviewDate.setFullYear(Number($('#calendarYear').value));
+    renderDailyPage();
+  });
+
+  $('#calendarMonth').addEventListener('change', () => {
+    state.reviewDate.setMonth(Number($('#calendarMonth').value));
+    renderDailyPage();
+  });
 }
 
 bindNavigation();

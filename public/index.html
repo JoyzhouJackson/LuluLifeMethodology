@@ -9,16 +9,15 @@
   <body>
     <header class="app-header">
       <div class="header-goals">
-        <div>
+        <button type="button" data-goal-edit="short">
           <span>短期目标</span>
           <strong id="activeShort">未设置</strong>
-        </div>
-        <div>
+        </button>
+        <button type="button" data-goal-edit="long">
           <span>长期目标</span>
           <strong id="activeLong">未设置</strong>
-        </div>
+        </button>
       </div>
-      <button class="goal-write-button" data-sheet="goals">写目标</button>
     </header>
 
     <main class="app-main">
@@ -119,7 +118,11 @@
               <p class="eyebrow">📜 Daily Page</p>
               <h2 id="dailyDate">今日书页</h2>
             </div>
-            <button class="secondary" id="refreshDaily">刷新</button>
+            <button class="secondary menu-toggle" id="refreshDaily" aria-label="展开日历">☰</button>
+          </div>
+          <div class="calendar-controls" id="calendarControls" hidden>
+            <select id="calendarYear" aria-label="选择年份"></select>
+            <select id="calendarMonth" aria-label="选择月份"></select>
           </div>
           <div id="dailyPage" class="daily-page"></div>
         </section>
@@ -128,15 +131,15 @@
 
     <nav class="bottom-nav" aria-label="底部菜单">
       <button class="nav-item active" data-view="home" aria-label="首页">
-        <span>🏠</span>
+        <span class="nav-icon pen-icon"></span>
         <small>首页</small>
       </button>
       <button class="nav-item" data-view="method" aria-label="方法论">
-        <span>🧭</span>
+        <span class="nav-icon flow-icon"></span>
         <small>方法论</small>
       </button>
       <button class="nav-item" data-view="review" aria-label="书页">
-        <span>📖</span>
+        <span class="nav-icon calendar-icon"></span>
         <small>书页</small>
       </button>
     </nav>
@@ -215,14 +218,22 @@
         <div class="sheet-panel" data-panel="goals">
           <div class="goal-row">
             <article>
-              <span>短期目标</span>
+              <div class="goal-card-head">
+                <span>短期目标</span>
+                <button class="text-button" type="button" data-goal-reward="short">奖励</button>
+              </div>
               <strong id="sheetActiveShort">未设置</strong>
-              <button class="secondary wide" data-complete-goal="short">完成 +50 欧</button>
+              <small id="sheetShortReward" class="muted">未设置奖励</small>
+              <button class="secondary wide" data-complete-goal="short">完成</button>
             </article>
             <article>
-              <span>长期目标</span>
+              <div class="goal-card-head">
+                <span>长期目标</span>
+                <button class="text-button" type="button" data-goal-reward="long">奖励</button>
+              </div>
               <strong id="sheetActiveLong">未设置</strong>
-              <button class="secondary wide" data-complete-goal="long">完成 +200 欧</button>
+              <small id="sheetLongReward" class="muted">未设置奖励</small>
+              <button class="secondary wide" data-complete-goal="long">完成</button>
             </article>
           </div>
           <form id="goalForm" class="stack-form">
@@ -238,17 +249,6 @@
         </div>
 
         <form id="redeemForm" class="sheet-panel" data-panel="piggy">
-          <div class="piggy-stage">
-            <div class="piggy">
-              <div class="piggy-fill" id="sheetPiggyFill"></div>
-              <div class="coin-layer" id="sheetCoinLayer"></div>
-              <div class="piggy-slot"></div>
-              <div class="piggy-ear"></div>
-              <div class="piggy-nose"></div>
-              <div class="piggy-foot left"></div>
-              <div class="piggy-foot right"></div>
-            </div>
-          </div>
           <input id="rewardTitle" placeholder="奖励了自己什么">
           <input id="rewardAmount" type="number" min="1" step="1" placeholder="金额">
           <input id="rewardPhoto" type="file" accept="image/*">

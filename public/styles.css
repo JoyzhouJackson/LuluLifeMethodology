@@ -2317,6 +2317,39 @@ textarea {
 }
 
 /* Browser-comment refinements */
+[hidden],
+.sheet-backdrop[hidden],
+.bottom-sheet[hidden] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.hero-card::before,
+.hero-card::after,
+.action-card::before,
+.action-card::after,
+.muyu-home::before,
+.muyu-home::after,
+.piggy-home::before,
+.piggy-home::after,
+.quiet-panel::before,
+.quiet-panel::after,
+.reader-panel::before,
+.reader-panel::after,
+.method-card::after,
+.daily-summary-card::after {
+  pointer-events: none !important;
+}
+
+button,
+[data-sheet],
+.nav-item,
+.method-preview,
+.canvas-node,
+.canvas-arrow-hit {
+  pointer-events: auto;
+}
+
 .hero-card::before {
   display: none;
 }
@@ -2463,4 +2496,236 @@ body[data-view="review"] #reviewView > .reader-panel::after {
   .ritual-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Targeted interaction and typography refinements */
+.header-goals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1;
+}
+
+.header-goals button {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-height: 50px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(246, 243, 248, 0.68));
+  box-shadow: var(--soft-shadow), inset 0 1px 1px rgba(255, 255, 255, 0.78);
+  text-align: left;
+  backdrop-filter: blur(18px);
+}
+
+.header-goals button::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: inset 0 0 24px rgba(130, 115, 163, 0.08);
+  pointer-events: none;
+  mask: linear-gradient(#000, transparent 62%);
+}
+
+.header-goals span,
+.header-goals strong {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-card .primary,
+.action-card,
+.action-card strong,
+.action-card small,
+.piggy-copy strong,
+.piggy-home .text-button,
+.muyu-count {
+  font-family: "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif !important;
+  letter-spacing: 0;
+}
+
+.hero-card .primary {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.action-card strong {
+  font-size: 15px;
+  line-height: 1.28;
+}
+
+.action-card small {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.piggy-copy strong {
+  font-size: 31px;
+  line-height: 1;
+}
+
+.piggy-home .text-button {
+  font-size: 13px;
+}
+
+.muyu-count {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.goal-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.goal-card-head .text-button {
+  min-height: 28px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--purple-pale);
+  color: var(--purple-deep);
+  font-size: 12px;
+}
+
+.calendar-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.menu-toggle {
+  width: 48px;
+  min-height: 42px;
+  padding: 0;
+  border-radius: 18px;
+  font-size: 18px;
+}
+
+.menu-toggle.active {
+  background: var(--purple-pale);
+  color: var(--purple-deep);
+}
+
+.canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.nav-icon {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-icon::before,
+.nav-icon::after {
+  content: "";
+  position: absolute;
+  inset: auto !important;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  color: #9b9ba2;
+}
+
+.pen-icon::before {
+  left: 8px;
+  top: 2px;
+  width: 5px;
+  height: 17px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(38deg);
+}
+
+.pen-icon::after {
+  left: 4px;
+  top: 16px;
+  width: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.flow-icon::before {
+  left: 2px;
+  top: 3px;
+  width: 6px;
+  height: 6px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.flow-icon::after {
+  left: 13px;
+  top: 12px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  background:
+    linear-gradient(currentColor, currentColor) -8px -5px / 9px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) -2px -5px / 2px 9px no-repeat;
+}
+
+.flow-icon {
+  background:
+    linear-gradient(#9b9ba2, #9b9ba2) 9px 8px / 8px 2px no-repeat,
+    linear-gradient(#9b9ba2, #9b9ba2) 16px 8px / 2px 7px no-repeat !important;
+}
+
+.nav-item.active .flow-icon {
+  background:
+    linear-gradient(var(--purple), var(--purple)) 9px 8px / 8px 2px no-repeat,
+    linear-gradient(var(--purple), var(--purple)) 16px 8px / 2px 7px no-repeat !important;
+}
+
+.calendar-icon::before {
+  left: 3px;
+  top: 4px;
+  width: 16px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-radius: 5px;
+}
+
+.calendar-icon::after {
+  left: 6px;
+  top: 9px;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 5px 0 currentColor;
+}
+
+.nav-item.active .nav-icon::before,
+.nav-item.active .nav-icon::after {
+  color: var(--purple);
+}
+
+/*
+  Keep the old positional navigation selectors from earlier iterations from
+  leaking into the new icon classes.
+*/
+.nav-item:nth-child(1) .nav-icon::before,
+.nav-item:nth-child(1) .nav-icon::after,
+.nav-item:nth-child(2) .nav-icon::before,
+.nav-item:nth-child(2) .nav-icon::after,
+.nav-item:nth-child(3) .nav-icon::before,
+.nav-item:nth-child(3) .nav-icon::after {
+  inset: auto !important;
 }
