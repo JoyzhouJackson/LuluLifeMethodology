@@ -8,6 +8,15 @@
   </head>
   <body>
     <header class="app-header">
+      <div class="home-titlebar">
+        <h1>露露的人生管理系统</h1>
+        <button class="settings-button" type="button" data-sheet="settings" aria-label="设置">
+          <svg viewBox="0 0 28 28" aria-hidden="true">
+            <path d="M14 5.2v3.2M14 19.6v3.2M7.8 7.8l2.3 2.3M17.9 17.9l2.3 2.3M5.2 14h3.2M19.6 14h3.2M7.8 20.2l2.3-2.3M17.9 10.1l2.3-2.3"/>
+            <circle cx="14" cy="14" r="3.6"/>
+          </svg>
+        </button>
+      </div>
       <div class="header-goals">
         <button type="button" data-goal-edit="short">
           <span>短期目标</span>
@@ -280,6 +289,13 @@
             <h3>历史肯定语</h3>
             <div id="affirmationHistoryList" class="small-list"></div>
           </section>
+        </div>
+
+        <div class="sheet-panel settings-panel" data-panel="settings">
+          <p class="field-hint">导出会把当前本地数据保存成 JSON 文件；导入 JSON 会覆盖当前数据。</p>
+          <button class="secondary wide" id="exportJson" type="button">导出 JSON</button>
+          <label class="secondary wide import-json-label" for="importJson">导入 JSON</label>
+          <input id="importJson" type="file" accept="application/json,.json" hidden>
         </div>
 
         <form id="methodForm" class="sheet-panel method-editor-panel" data-panel="method">

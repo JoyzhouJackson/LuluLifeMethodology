@@ -24,6 +24,7 @@ const SHEETS = {
   piggy: ['💰 奖励系统', '存钱罐'],
   affirmation: ['🪵 十万遍肯定语', '木鱼计数'],
   method: ['🧭 把经验变成路径', '方法论流程图'],
+  settings: ['⚙ 数据备份', '设置'],
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -122,6 +123,39 @@ async function saveData() {
     body: JSON.stringify(state.data),
   });
   renderAll();
+}
+
+function exportJsonData() {
+  const date = new Date().toISOString().slice(0, 10);
+  const blob = new Blob([JSON.stringify(ensureData(state.data), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `lulu-life-system-${date}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importJsonData(file) {
+  if (!file) return;
+  const text = await file.text();
+  let imported;
+  try {
+    imported = JSON.parse(text);
+  } catch {
+    alert('这个文件不是有效的 JSON。');
+    return;
+  }
+  if (!imported || typeof imported !== 'object' || Array.isArray(imported)) {
+    alert('这个 JSON 格式不适合导入。');
+    return;
+  }
+  if (!confirm('导入会覆盖当前本地数据，确定继续吗？')) return;
+  state.data = ensureData(imported);
+  await saveData();
+  closeSheet();
 }
 
 function makeId(prefix) {
@@ -532,14 +566,30 @@ function methodLinesFromMethod(method) {
 
 function methodFlowMarkup(lines) {
   const cleanLines = lines.map((line) => line.trim()).filter(Boolean);
+  const rowSize = 3;
+  const rows = [];
+  for (let index = 0; index < cleanLines.length; index += rowSize) {
+    rows.push(cleanLines.slice(index, index + rowSize));
+  }
   return `
-    <div class="method-flow-text">
-      <span class="flow-type">text</span>
+    <div class="method-flow-text method-flow-snake">
+      <span class="flow-type">TEXT</span>
       ${cleanLines.length
-        ? cleanLines.map((line, index) => `
-            <div class="flow-line">${escapeHtml(line)}</div>
-            ${index < cleanLines.length - 1 ? '<div class="flow-arrow">↓</div>' : ''}
-          `).join('')
+        ? rows.map((row, rowIndex) => {
+            const isReverse = rowIndex % 2 === 1;
+            const visualRow = isReverse ? [...row].reverse() : row;
+            const arrow = isReverse ? '←' : '→';
+            const turnSide = isReverse ? 'left' : 'right';
+            return `
+              <div class="snake-row ${isReverse ? 'reverse' : ''}">
+                ${visualRow.map((line, itemIndex) => `
+                  <div class="snake-step">${escapeHtml(line)}</div>
+                  ${itemIndex < visualRow.length - 1 ? `<span class="snake-arrow">${arrow}</span>` : ''}
+                `).join('')}
+              </div>
+              ${rowIndex < rows.length - 1 ? `<div class="snake-turn ${turnSide}">↓</div>` : ''}
+            `;
+          }).join('')
         : '<p class="empty">每行写一步，保存后会生成清晰的流程卡片。</p>'}
     </div>
   `;
@@ -604,7 +654,6 @@ function renderMethods() {
               <div class="sheet-actions">
                 <span class="muted">${new Date(method.createdAt).toLocaleDateString('zh-CN')}</span>
                 <span>
-                  <button class="secondary" data-edit-method="${method.id}">编辑</button>
                   <button class="secondary" data-delete-method="${method.id}">删除</button>
                 </span>
               </div>
@@ -733,9 +782,6 @@ function renderDailyPage() {
   `;
   $('#dailyPage').classList.remove('daily-summary');
   renderCalendarControls();
-  requestAnimationFrame(() => {
-    $('.date-strip .date-chip.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  });
 }
 
 function renderAll() {
@@ -989,6 +1035,12 @@ function bindNavigation() {
 }
 
 function bindForms() {
+  $('#exportJson')?.addEventListener('click', exportJsonData);
+  $('#importJson')?.addEventListener('change', async (event) => {
+    await importJsonData(event.target.files?.[0]);
+    event.target.value = '';
+  });
+
   $('#quickForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const content = $('#quickInput').value.trim();
